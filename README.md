@@ -1,1 +1,2 @@
-# Atomicbot-heartbeat-test
+# Atomicbot Heartbeat Test
+Simple Flask app for Railway deployment.
