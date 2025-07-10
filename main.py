@@ -1,38 +1,46 @@
-from flask import Flask
+import os
 import requests
+from flask import Flask
 from threading import Thread
 import time
-import pytz
-from datetime import datetime
 
 app = Flask(__name__)
 
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK")
-TIMEZONE = pytz.timezone("Europe/Oslo")
 
-def send_heartbeat(message):
+def send_discord_message(content):
     if WEBHOOK_URL:
-        requests.post(WEBHOOK_URL, json={"content": message})
-
-def hourly_report():
-    for _ in range(24):
-        send_heartbeat("⏱️ Hourly heartbeat check.")
-        time.sleep(3600)
-    daily_report()
-
-def daily_report():
-    while True:
-        now = datetime.now(TIMEZONE)
-        if now.hour == 6 and now.minute == 0:
-            send_heartbeat("🌅 Daily heartbeat check at 06:00.")
-            time.sleep(60)
-        time.sleep(30)
+        try:
+            requests.post(WEBHOOK_URL, json={"content": content})
+        except Exception as e:
+            print(f"Failed to send message: {e}")
+    else:
+        print("Webhook URL is not set.")
 
 @app.route("/")
 def home():
-    send_heartbeat("✅ Bot started and is alive!")
-    Thread(target=hourly_report).start()
-    return "✅ Bot started and is alive!"
+    return "Bot is alive!"
+
+def schedule_reports():
+    while True:
+        current_hour = time.localtime().tm_hour
+        current_minute = time.localtime().tm_min
+
+        # Send rapport hver time det første døgnet (etter oppstart)
+        if uptime_seconds < 86400 or (current_hour == 6 and current_minute == 0):
+            send_discord_message("📡 Heartbeat: Bot is running.")
+        time.sleep(60)
+
+# Start rapporterings-tråden
+uptime_seconds = 0
+
+def uptime_tracker():
+    global uptime_seconds
+    while True:
+        time.sleep(1)
+        uptime_seconds += 1
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    Thread(target=schedule_reports, daemon=True).start()
+    Thread(target=uptime_tracker, daemon=True).start()
+    app.run(host="0.0.0.0", port=3000)
