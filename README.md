@@ -1,3 +1,3 @@
 # Atomicbot Heartbeat Test
 
-This simple Flask app sends a startup ping, hourly heartbeats for the first 24 hours, and then a daily ping at 06:00 Oslo time to a configured Discord webhook.
+Simple Flask app that pings a Discord webhook hourly for 24h, then daily at 06:00 CET.
