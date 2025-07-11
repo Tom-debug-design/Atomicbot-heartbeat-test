@@ -1,2 +1,2 @@
-# AtomicBot – Smart Strategy Selector
-Evaluates best performing strategy hourly and adjusts accordingly.
+# AtomicBot – Trend + RSI
+Bot med MA- og RSI-baserte strategier, auto-bytte og smart velger.
