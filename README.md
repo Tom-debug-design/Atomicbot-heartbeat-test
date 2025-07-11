@@ -1,1 +1,1 @@
-# AtomicBot – With Simulated PnL, Trend + RSI\nEvaluates strategies using profit/loss simulation.
+# AtomicBot Realistic PnL\nTrade bot with entry/exit logic, take profit and stop loss.

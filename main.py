@@ -2,10 +2,8 @@
 import time
 import threading
 import requests
-import csv
 from flask import Flask, jsonify
 from collections import defaultdict
-import statistics
 
 app = Flask(__name__)
 
@@ -14,68 +12,10 @@ TOKENS = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]
 TRADE_INTERVAL = 60
 HEARTBEAT_INTERVAL = 3600
 
-trade_log = []
-strategy_stats = defaultdict(lambda: {"count": 0, "volume": 0.0, "pnl": 0.0})
-strategy_score = defaultdict(float)
-last_best_strategy = "basic"
-entry_prices = {}
-
-def get_prices(symbol, limit=20):
-    url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval=1m&limit={limit}"
-    try:
-        r = requests.get(url, timeout=3)
-        r.raise_for_status()
-        return [float(k[4]) for k in r.json()]
-    except:
-        return []
-
-def rsi(prices, period=14):
-    if len(prices) < period + 1:
-        return None
-    deltas = [prices[i+1] - prices[i] for i in range(period)]
-    gains = sum(d for d in deltas if d > 0)
-    losses = -sum(d for d in deltas if d < 0)
-    if losses == 0:
-        return 100
-    rs = gains / losses
-    return 100 - (100 / (1 + rs))
-
-def ma(prices, period):
-    if len(prices) < period:
-        return None
-    return statistics.mean(prices[-period:])
-
-def strategy_basic(symbol, price): return True
-def strategy_even_minute(symbol, price): return int(time.time() / 60) % 2 == 0
-def strategy_expensive_only(symbol, price): return price > 500
-def strategy_ma(symbol, price): 
-    prices = get_prices(symbol)
-    ma5 = ma(prices, 5)
-    ma10 = ma(prices, 10)
-    return ma5 and ma10 and ma5 > ma10
-def strategy_rsi(symbol, price): 
-    prices = get_prices(symbol)
-    val = rsi(prices)
-    return val and val < 30
-def strategy_combo(symbol, price): 
-    prices = get_prices(symbol)
-    ma5 = ma(prices, 5)
-    ma10 = ma(prices, 10)
-    rsi_val = rsi(prices)
-    return ma5 and ma10 and rsi_val and ma5 > ma10 and rsi_val < 30
-
-STRATEGIES = {
-    "basic": strategy_basic,
-    "even_minute": strategy_even_minute,
-    "expensive_only": strategy_expensive_only,
-    "trend_ma": strategy_ma,
-    "rsi_low": strategy_rsi,
-    "trend_rsi_combo": strategy_combo
-}
-
-def choose_strategy():
-    global last_best_strategy
-    return STRATEGIES.get(last_best_strategy, strategy_basic), last_best_strategy
+open_positions = {}
+trade_history = []
+strategy_stats = defaultdict(lambda: {"wins": 0, "losses": 0, "pnl": 0.0, "count": 0})
+last_strategy = "basic"
 
 def get_price(symbol):
     url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
@@ -86,82 +26,129 @@ def get_price(symbol):
     except:
         return None
 
-def send_to_discord(msg):
-    try:
-        requests.post(DISCORD_WEBHOOK_URL, json={"content": msg})
-    except:
-        pass
+def strategy_basic(symbol, price): return True
+def strategy_even(symbol, price): return int(time.time() / 60) % 2 == 0
+def strategy_expensive(symbol, price): return price > 500
 
-def log_trade_csv(entry):
-    try:
-        with open("trades.csv", "a", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([entry["timestamp"], entry["strategy"], entry["symbol"], entry["price"], entry["amount"], entry["qty"], entry["pnl"]])
-    except:
-        pass
+STRATEGIES = {
+    "basic": strategy_basic,
+    "even": strategy_even,
+    "expensive": strategy_expensive,
+}
 
-def simulate_trades():
-    global trade_log, entry_prices
-    balance = 1000
-    amount = balance * 0.05
+def choose_strategy():
+    global last_strategy
+    return STRATEGIES.get(last_strategy, strategy_basic), last_strategy
+
+def simulate_entry():
     strat_fn, strat_name = choose_strategy()
+    amount = 50
 
-    for symbol in TOKENS:
-        price = get_price(symbol)
-        if price and strat_fn(symbol, price):
-            qty = amount / price
-            exit_price = price * (1 + 0.01)  # Simulated 1% gain
-            pnl = (exit_price - price) * qty
-            entry = {
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "symbol": symbol,
-                "price": price,
+    for token in TOKENS:
+        if token in open_positions:
+            continue
+
+        price = get_price(token)
+        if not price or not strat_fn(token, price):
+            continue
+
+        qty = amount / price
+        open_positions[token] = {
+            "entry_price": price,
+            "qty": qty,
+            "amount": amount,
+            "strategy": strat_name,
+            "time": time.strftime("%H:%M:%S")
+        }
+
+        msg = f"📥 Entry [{strat_name}] {token} @ ${price:.2f} | Qty: {qty:.4f}"
+        print(msg)
+        send_to_discord(msg)
+
+def check_exit():
+    for token, pos in list(open_positions.items()):
+        current_price = get_price(token)
+        if not current_price:
+            continue
+
+        entry = pos["entry_price"]
+        qty = pos["qty"]
+        change = (current_price - entry) / entry
+
+        exit_reason = None
+        if change >= 0.02:
+            exit_reason = "🎯 Take Profit"
+        elif change <= -0.01:
+            exit_reason = "🛑 Stop Loss"
+
+        if exit_reason:
+            pnl = (current_price - entry) * qty
+            strat = pos["strategy"]
+            strategy_stats[strat]["count"] += 1
+            strategy_stats[strat]["pnl"] += pnl
+            if pnl >= 0:
+                strategy_stats[strat]["wins"] += 1
+            else:
+                strategy_stats[strat]["losses"] += 1
+
+            msg = f"{exit_reason} [{strat}] {token} | Entry: ${entry:.2f} → Exit: ${current_price:.2f} | PnL: ${pnl:.2f}"
+            print(msg)
+            send_to_discord(msg)
+
+            trade_history.append({
+                "token": token,
+                "strategy": strat,
+                "pnl": pnl,
+                "entry": entry,
+                "exit": current_price,
                 "qty": qty,
-                "amount": amount,
-                "strategy": strat_name,
-                "pnl": pnl
-            }
-            trade_log.append(entry)
-            strategy_stats[strat_name]["count"] += 1
-            strategy_stats[strat_name]["volume"] += amount
-            strategy_stats[strat_name]["pnl"] += pnl
-            strategy_score[strat_name] += pnl
-            log_trade_csv(entry)
-            print(f"💰 BUY [{strat_name}] {symbol} @ ${price:.2f} | ${amount:.2f} | Qty: {qty:.4f} | PnL: ${pnl:.2f}")
+                "time": time.strftime("%Y-%m-%d %H:%M:%S")
+            })
+
+            del open_positions[token]
 
 def hourly_report():
-    global trade_log, strategy_stats, strategy_score, last_best_strategy
+    global strategy_stats
     while True:
         time.sleep(HEARTBEAT_INTERVAL)
-        total_trades = len(trade_log)
-        total_volume = sum([x["amount"] for x in trade_log])
-        total_pnl = sum([x["pnl"] for x in trade_log])
-        msg = f"📊 **Hourly Trading Summary**\n🧾 Total trades: {total_trades}\n💸 Total spend: ${total_volume:.2f}\n📈 Estimated PnL: ${total_pnl:.2f}\n"
-        for strat, stats in strategy_stats.items():
-            msg += f"🔁 '{strat}': {stats['count']} trades | Spend: ${stats['volume']:.2f} | PnL: ${stats['pnl']:.2f}\n"
-        if strategy_score:
-            best = max(strategy_score, key=strategy_score.get)
-            last_best_strategy = best
-            msg += f"🎯 Smart selector: Next = **{best}**"
-        send_to_discord(msg)
-        print(msg)
-        trade_log.clear()
+        report = f"📊 **Hourly Trading Report**\n"
+        total_pnl = sum(stat["pnl"] for stat in strategy_stats.values())
+        report += f"💸 Total PnL: ${total_pnl:.2f}\n"
+        for strat, stat in strategy_stats.items():
+            report += f"🔁 '{strat}': {stat['count']} trades | Wins: {stat['wins']} | Losses: {stat['losses']} | PnL: ${stat['pnl']:.2f}\n"
+        best = max(strategy_stats.items(), key=lambda x: x[1]["pnl"])[0]
+        global last_strategy
+        last_strategy = best
+        report += f"🎯 Next strategy: **{best}**"
+        send_to_discord(report)
         strategy_stats.clear()
-        strategy_score.clear()
+
+def send_to_discord(message):
+    try:
+        requests.post(DISCORD_WEBHOOK_URL, json={"content": message})
+    except:
+        pass
 
 @app.route("/")
 def home():
-    return "✅ Bot with PnL + RSI + MA is live!"
+    return "✅ Realistic Trading Bot Running"
 
-@app.route("/api/trades")
-def get_trades():
-    return jsonify(trade_log)
+@app.route("/api/open")
+def open_trades():
+    return jsonify(open_positions)
 
-def start_threads():
-    threading.Thread(target=hourly_report, daemon=True).start()
-    threading.Thread(target=lambda: (time.sleep(5), [simulate_trades() or time.sleep(TRADE_INTERVAL) for _ in iter(int, 1)]), daemon=True).start()
+@app.route("/api/history")
+def history():
+    return jsonify(trade_history)
 
-start_threads()
+def run_trading_loop():
+    while True:
+        simulate_entry()
+        check_exit()
+        time.sleep(TRADE_INTERVAL)
+
+threading.Thread(target=run_trading_loop, daemon=True).start()
+threading.Thread(target=hourly_report, daemon=True).start()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
