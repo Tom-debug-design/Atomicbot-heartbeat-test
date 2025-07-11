@@ -3,19 +3,35 @@ import time
 import threading
 import requests
 from flask import Flask
+from collections import defaultdict
 
 app = Flask(__name__)
 
 DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1391855933071560735/uH6LYuqM6uHLet9KhsgCS89fQikhyuPRJmjhqmtESMhAlu3LxDfUrVggwxzSGyscEtiN"
 TOKENS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "XRPUSDT", "ADAUSDT", "SOLUSDT", "AVAXUSDT", "MATICUSDT"]
-TRADE_INTERVAL = 60  # seconds
-HEARTBEAT_INTERVAL = 3600  # seconds
+TRADE_INTERVAL = 60
+HEARTBEAT_INTERVAL = 3600
 
-def send_to_discord(message):
-    try:
-        requests.post(DISCORD_WEBHOOK_URL, json={"content": message})
-    except Exception as e:
-        print(f"Failed to send message to Discord: {e}")
+trade_log = []
+strategy_stats = defaultdict(lambda: {"count": 0, "volume": 0.0})
+
+def strategy_basic(symbol, price):
+    return True
+
+def strategy_even_minute(symbol, price):
+    return int(time.time() / 60) % 2 == 0
+
+def strategy_expensive_only(symbol, price):
+    return price > 500
+
+def choose_strategy():
+    sec = int(time.time())
+    if sec % 1800 < 600:
+        return strategy_basic, "basic"
+    elif sec % 1800 < 1200:
+        return strategy_even_minute, "even_minute"
+    else:
+        return strategy_expensive_only, "expensive_only"
 
 def get_price(symbol):
     url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
@@ -27,39 +43,57 @@ def get_price(symbol):
         print(f"Error getting price for {symbol}: {e}")
         return None
 
+def send_to_discord(message):
+    try:
+        requests.post(DISCORD_WEBHOOK_URL, json={"content": message})
+    except Exception as e:
+        print(f"Failed to send message to Discord: {e}")
+
 def simulate_trades():
-    balance = 1000  # Simulert USDT balanse
+    balance = 1000
     amount = balance * 0.05
+    strategy_fn, strategy_name = choose_strategy()
+
     for symbol in TOKENS:
         price = get_price(symbol)
-        if price:
+        if price and strategy_fn(symbol, price):
             qty = amount / price
-            message = f"💰 Simulated BUY: {symbol} at ${price:.2f} | Amount: ${amount:.2f} | Qty: {qty:.4f}"
-            print(message)
-            send_to_discord(message)
+            log = {
+                "symbol": symbol,
+                "price": price,
+                "qty": qty,
+                "amount": amount,
+                "strategy": strategy_name
+            }
+            trade_log.append(log)
+            strategy_stats[strategy_name]["count"] += 1
+            strategy_stats[strategy_name]["volume"] += amount
+            print(f"💰 BUY [{strategy_name}] {symbol} @ ${price:.2f} | ${amount:.2f} | Qty: {qty:.4f}")
 
-def trade_loop():
+def hourly_report():
     while True:
-        print("🔁 Running trade loop...")
-        simulate_trades()
-        time.sleep(TRADE_INTERVAL)
+        time.sleep(HEARTBEAT_INTERVAL)
+        total_trades = len(trade_log)
+        total_volume = sum([x["amount"] for x in trade_log])
 
-def heartbeat_loop():
-    hour_count = 0
-    while True:
-        hour_count += 1
-        message = f"⏰ Hourly report: {hour_count}/24 completed."
+        message = f"📊 **Hourly Trading Summary**\n"
+        message += f"🧾 Total trades: {total_trades}\n💸 Total simulated spend: ${total_volume:.2f}\n"
+
+        for strat, stats in strategy_stats.items():
+            message += f"🔁 Strategy '{strat}': {stats['count']} trades | Simulated spend: ${stats['volume']:.2f}\n"
+
         print(message)
         send_to_discord(message)
-        time.sleep(HEARTBEAT_INTERVAL)
+
+        trade_log.clear()
+        strategy_stats.clear()
 
 @app.route("/")
 def home():
-    return "AtomicBot is running."
+    return "AtomicBot (strategy summary) is running."
 
-# Start background threads even when run via gunicorn
-threading.Thread(target=trade_loop, daemon=True).start()
-threading.Thread(target=heartbeat_loop, daemon=True).start()
+threading.Thread(target=hourly_report, daemon=True).start()
+threading.Thread(target=lambda: (time.sleep(10), [simulate_trades() or time.sleep(TRADE_INTERVAL) for _ in iter(int, 1)]), daemon=True).start()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)

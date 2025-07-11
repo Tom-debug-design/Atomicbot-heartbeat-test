@@ -1,2 +1,2 @@
-# AtomicBot
-Simulert trading med Discord-logging og heartbeat.
+# AtomicBot – Strategioversikt
+Tydelig per-strategi rapport med simulert volum og handelsantall.
