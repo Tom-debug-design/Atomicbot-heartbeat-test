@@ -40,6 +40,7 @@ def simulate_trades():
 
 def trade_loop():
     while True:
+        print("🔁 Running trade loop...")
         simulate_trades()
         time.sleep(TRADE_INTERVAL)
 
@@ -56,7 +57,9 @@ def heartbeat_loop():
 def home():
     return "AtomicBot is running."
 
+# Start background threads even when run via gunicorn
+threading.Thread(target=trade_loop, daemon=True).start()
+threading.Thread(target=heartbeat_loop, daemon=True).start()
+
 if __name__ == "__main__":
-    threading.Thread(target=trade_loop, daemon=True).start()
-    threading.Thread(target=heartbeat_loop, daemon=True).start()
     app.run(host="0.0.0.0", port=8080)

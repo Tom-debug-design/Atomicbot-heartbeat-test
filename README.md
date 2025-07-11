@@ -1,2 +1,2 @@
 # AtomicBot
-Live trading bot with simulated trades and heartbeat reporting to Discord.
+Simulert trading med Discord-logging og heartbeat.
