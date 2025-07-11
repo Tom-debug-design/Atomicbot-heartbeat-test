@@ -1,2 +1,2 @@
-# Atomicbot 5% Simulated Trader with Live Binance Price
-Simulates trades using 5% capital per asset from live Binance market data and reports to Discord.
+# AtomicBot
+Live trading bot with simulated trades and heartbeat reporting to Discord.
