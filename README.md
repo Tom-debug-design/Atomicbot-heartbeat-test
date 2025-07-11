@@ -1,2 +1,2 @@
-# AtomicBot – Stabil versjon
-Flask + gunicorn klar for Railway med logging og API.
+# AtomicBot – Smart Strategy Selector
+Evaluates best performing strategy hourly and adjusts accordingly.

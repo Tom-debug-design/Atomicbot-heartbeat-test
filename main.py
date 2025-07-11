@@ -15,57 +15,55 @@ HEARTBEAT_INTERVAL = 3600
 
 trade_log = []
 strategy_stats = defaultdict(lambda: {"count": 0, "volume": 0.0})
+strategy_score = defaultdict(float)
+last_best_strategy = "basic"
 
-def strategy_basic(symbol, price):
-    return True
+def strategy_basic(symbol, price): return True
+def strategy_even_minute(symbol, price): return int(time.time() / 60) % 2 == 0
+def strategy_expensive_only(symbol, price): return price > 500
 
-def strategy_even_minute(symbol, price):
-    return int(time.time() / 60) % 2 == 0
-
-def strategy_expensive_only(symbol, price):
-    return price > 500
+STRATEGIES = {
+    "basic": strategy_basic,
+    "even_minute": strategy_even_minute,
+    "expensive_only": strategy_expensive_only
+}
 
 def choose_strategy():
-    sec = int(time.time())
-    if sec % 1800 < 600:
-        return strategy_basic, "basic"
-    elif sec % 1800 < 1200:
-        return strategy_even_minute, "even_minute"
-    else:
-        return strategy_expensive_only, "expensive_only"
+    global last_best_strategy
+    return STRATEGIES.get(last_best_strategy, strategy_basic), last_best_strategy
 
 def get_price(symbol):
     url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
     try:
-        response = requests.get(url)
-        response.raise_for_status()
-        return float(response.json()["price"])
-    except Exception as e:
-        print(f"Error getting price for {symbol}: {e}")
+        r = requests.get(url, timeout=3)
+        r.raise_for_status()
+        return float(r.json()["price"])
+    except:
         return None
 
-def send_to_discord(message):
+def send_to_discord(msg):
     try:
-        requests.post(DISCORD_WEBHOOK_URL, json={"content": message})
-    except Exception as e:
-        print(f"Failed to send message to Discord: {e}")
+        requests.post(DISCORD_WEBHOOK_URL, json={"content": msg})
+    except:
+        pass
 
-def log_trade_to_csv(entry):
+def log_trade_csv(entry):
     try:
-        with open("trades.csv", "a", newline="") as file:
-            writer = csv.writer(file)
+        with open("trades.csv", "a", newline="") as f:
+            writer = csv.writer(f)
             writer.writerow([entry["timestamp"], entry["strategy"], entry["symbol"], entry["price"], entry["amount"], entry["qty"]])
-    except Exception as e:
-        print(f"Error writing to CSV: {e}")
+    except:
+        pass
 
 def simulate_trades():
+    global trade_log
     balance = 1000
     amount = balance * 0.05
-    strategy_fn, strategy_name = choose_strategy()
+    strat_fn, strat_name = choose_strategy()
 
     for symbol in TOKENS:
         price = get_price(symbol)
-        if price and strategy_fn(symbol, price):
+        if price and strat_fn(symbol, price):
             qty = amount / price
             entry = {
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -73,46 +71,53 @@ def simulate_trades():
                 "price": price,
                 "qty": qty,
                 "amount": amount,
-                "strategy": strategy_name
+                "strategy": strat_name
             }
             trade_log.append(entry)
-            strategy_stats[strategy_name]["count"] += 1
-            strategy_stats[strategy_name]["volume"] += amount
-            log_trade_to_csv(entry)
-            print(f"💰 BUY [{strategy_name}] {symbol} @ ${price:.2f} | ${amount:.2f} | Qty: {qty:.4f}")
+            strategy_stats[strat_name]["count"] += 1
+            strategy_stats[strat_name]["volume"] += amount
+            strategy_score[strat_name] += 1  # for nå: score = count
+            log_trade_csv(entry)
+            print(f"💰 BUY [{strat_name}] {symbol} @ ${price:.2f} | ${amount:.2f} | Qty: {qty:.4f}")
 
 def hourly_report():
+    global trade_log, strategy_stats, strategy_score, last_best_strategy
+
     while True:
         time.sleep(HEARTBEAT_INTERVAL)
         total_trades = len(trade_log)
         total_volume = sum([x["amount"] for x in trade_log])
-
-        message = f"📊 **Hourly Trading Summary**\n"
-        message += f"🧾 Total trades: {total_trades}\n💸 Total simulated spend: ${total_volume:.2f}\n"
+        msg = f"📊 **Hourly Trading Summary**\n🧾 Total trades: {total_trades}\n💸 Total simulated spend: ${total_volume:.2f}\n"
 
         for strat, stats in strategy_stats.items():
-            message += f"🔁 Strategy '{strat}': {stats['count']} trades | Simulated spend: ${stats['volume']:.2f}\n"
+            msg += f"🔁 Strategy '{strat}': {stats['count']} trades | Spend: ${stats['volume']:.2f}\n"
 
-        print(message)
-        send_to_discord(message)
+        # Strategy decision logic: choose highest score
+        if strategy_score:
+            best = max(strategy_score, key=strategy_score.get)
+            last_best_strategy = best
+            msg += f"🎯 Smart selector: Next hour = **{best}**"
+
+        send_to_discord(msg)
+        print(msg)
+
         trade_log.clear()
         strategy_stats.clear()
+        strategy_score.clear()
 
 @app.route("/")
 def home():
-    return "✅ AtomicBot backend is alive and responding!"
+    return "✅ SmartBot is up!"
 
 @app.route("/api/trades")
 def get_trades():
     return jsonify(trade_log)
 
-def start_background_threads():
-    print("🚀 Starting background threads...")
+def start_threads():
     threading.Thread(target=hourly_report, daemon=True).start()
-    threading.Thread(target=lambda: (time.sleep(10), [simulate_trades() or time.sleep(TRADE_INTERVAL) for _ in iter(int, 1)]), daemon=True).start()
+    threading.Thread(target=lambda: (time.sleep(5), [simulate_trades() or time.sleep(TRADE_INTERVAL) for _ in iter(int, 1)]), daemon=True).start()
 
-start_background_threads()
+start_threads()
 
 if __name__ == "__main__":
-    print("✅ Flask app starting via __main__")
     app.run(host="0.0.0.0", port=8080)
