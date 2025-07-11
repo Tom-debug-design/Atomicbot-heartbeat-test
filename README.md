@@ -1,2 +1,1 @@
-# AtomicBot – Trend + RSI
-Bot med MA- og RSI-baserte strategier, auto-bytte og smart velger.
+# AtomicBot – With Simulated PnL, Trend + RSI\nEvaluates strategies using profit/loss simulation.

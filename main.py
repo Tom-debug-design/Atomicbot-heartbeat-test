@@ -15,18 +15,17 @@ TRADE_INTERVAL = 60
 HEARTBEAT_INTERVAL = 3600
 
 trade_log = []
-strategy_stats = defaultdict(lambda: {"count": 0, "volume": 0.0})
+strategy_stats = defaultdict(lambda: {"count": 0, "volume": 0.0, "pnl": 0.0})
 strategy_score = defaultdict(float)
 last_best_strategy = "basic"
-
-# === Strategy functions ===
+entry_prices = {}
 
 def get_prices(symbol, limit=20):
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval=1m&limit={limit}"
     try:
         r = requests.get(url, timeout=3)
         r.raise_for_status()
-        return [float(k[4]) for k in r.json()]  # close prices
+        return [float(k[4]) for k in r.json()]
     except:
         return []
 
@@ -49,19 +48,16 @@ def ma(prices, period):
 def strategy_basic(symbol, price): return True
 def strategy_even_minute(symbol, price): return int(time.time() / 60) % 2 == 0
 def strategy_expensive_only(symbol, price): return price > 500
-
-def strategy_ma(symbol, price):
+def strategy_ma(symbol, price): 
     prices = get_prices(symbol)
     ma5 = ma(prices, 5)
     ma10 = ma(prices, 10)
     return ma5 and ma10 and ma5 > ma10
-
-def strategy_rsi(symbol, price):
+def strategy_rsi(symbol, price): 
     prices = get_prices(symbol)
     val = rsi(prices)
     return val and val < 30
-
-def strategy_combo(symbol, price):
+def strategy_combo(symbol, price): 
     prices = get_prices(symbol)
     ma5 = ma(prices, 5)
     ma10 = ma(prices, 10)
@@ -100,12 +96,12 @@ def log_trade_csv(entry):
     try:
         with open("trades.csv", "a", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow([entry["timestamp"], entry["strategy"], entry["symbol"], entry["price"], entry["amount"], entry["qty"]])
+            writer.writerow([entry["timestamp"], entry["strategy"], entry["symbol"], entry["price"], entry["amount"], entry["qty"], entry["pnl"]])
     except:
         pass
 
 def simulate_trades():
-    global trade_log
+    global trade_log, entry_prices
     balance = 1000
     amount = balance * 0.05
     strat_fn, strat_name = choose_strategy()
@@ -114,20 +110,24 @@ def simulate_trades():
         price = get_price(symbol)
         if price and strat_fn(symbol, price):
             qty = amount / price
+            exit_price = price * (1 + 0.01)  # Simulated 1% gain
+            pnl = (exit_price - price) * qty
             entry = {
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
                 "symbol": symbol,
                 "price": price,
                 "qty": qty,
                 "amount": amount,
-                "strategy": strat_name
+                "strategy": strat_name,
+                "pnl": pnl
             }
             trade_log.append(entry)
             strategy_stats[strat_name]["count"] += 1
             strategy_stats[strat_name]["volume"] += amount
-            strategy_score[strat_name] += 1
+            strategy_stats[strat_name]["pnl"] += pnl
+            strategy_score[strat_name] += pnl
             log_trade_csv(entry)
-            print(f"💰 BUY [{strat_name}] {symbol} @ ${price:.2f} | ${amount:.2f} | Qty: {qty:.4f}")
+            print(f"💰 BUY [{strat_name}] {symbol} @ ${price:.2f} | ${amount:.2f} | Qty: {qty:.4f} | PnL: ${pnl:.2f}")
 
 def hourly_report():
     global trade_log, strategy_stats, strategy_score, last_best_strategy
@@ -135,13 +135,14 @@ def hourly_report():
         time.sleep(HEARTBEAT_INTERVAL)
         total_trades = len(trade_log)
         total_volume = sum([x["amount"] for x in trade_log])
-        msg = f"📊 **Hourly Trading Summary**\n🧾 Total trades: {total_trades}\n💸 Total simulated spend: ${total_volume:.2f}\n"
+        total_pnl = sum([x["pnl"] for x in trade_log])
+        msg = f"📊 **Hourly Trading Summary**\n🧾 Total trades: {total_trades}\n💸 Total spend: ${total_volume:.2f}\n📈 Estimated PnL: ${total_pnl:.2f}\n"
         for strat, stats in strategy_stats.items():
-            msg += f"🔁 Strategy '{strat}': {stats['count']} trades | Spend: ${stats['volume']:.2f}\n"
+            msg += f"🔁 '{strat}': {stats['count']} trades | Spend: ${stats['volume']:.2f} | PnL: ${stats['pnl']:.2f}\n"
         if strategy_score:
             best = max(strategy_score, key=strategy_score.get)
             last_best_strategy = best
-            msg += f"🎯 Smart selector: Next hour = **{best}**"
+            msg += f"🎯 Smart selector: Next = **{best}**"
         send_to_discord(msg)
         print(msg)
         trade_log.clear()
@@ -150,7 +151,7 @@ def hourly_report():
 
 @app.route("/")
 def home():
-    return "✅ TrendBot + RSI is running."
+    return "✅ Bot with PnL + RSI + MA is live!"
 
 @app.route("/api/trades")
 def get_trades():
