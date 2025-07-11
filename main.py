@@ -51,9 +51,12 @@ def send_to_discord(message):
         print(f"Failed to send message to Discord: {e}")
 
 def log_trade_to_csv(entry):
-    with open("trades.csv", "a", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow([entry["timestamp"], entry["strategy"], entry["symbol"], entry["price"], entry["amount"], entry["qty"]])
+    try:
+        with open("trades.csv", "a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow([entry["timestamp"], entry["strategy"], entry["symbol"], entry["price"], entry["amount"], entry["qty"]])
+    except Exception as e:
+        print(f"Error writing to CSV: {e}")
 
 def simulate_trades():
     balance = 1000
@@ -97,14 +100,19 @@ def hourly_report():
 
 @app.route("/")
 def home():
-    return "AtomicBot Live Test Server"
+    return "✅ AtomicBot backend is alive and responding!"
 
 @app.route("/api/trades")
 def get_trades():
     return jsonify(trade_log)
 
-threading.Thread(target=hourly_report, daemon=True).start()
-threading.Thread(target=lambda: (time.sleep(10), [simulate_trades() or time.sleep(TRADE_INTERVAL) for _ in iter(int, 1)]), daemon=True).start()
+def start_background_threads():
+    print("🚀 Starting background threads...")
+    threading.Thread(target=hourly_report, daemon=True).start()
+    threading.Thread(target=lambda: (time.sleep(10), [simulate_trades() or time.sleep(TRADE_INTERVAL) for _ in iter(int, 1)]), daemon=True).start()
+
+start_background_threads()
 
 if __name__ == "__main__":
+    print("✅ Flask app starting via __main__")
     app.run(host="0.0.0.0", port=8080)

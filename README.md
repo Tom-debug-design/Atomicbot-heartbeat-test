@@ -1,2 +1,2 @@
-# AtomicBot Live Demo
-Lagrer handler, sender rapporter og støtter API-endepunkt for dashboard.
+# AtomicBot – Stabil versjon
+Flask + gunicorn klar for Railway med logging og API.
