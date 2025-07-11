@@ -2,7 +2,8 @@
 import time
 import threading
 import requests
-from flask import Flask
+import csv
+from flask import Flask, jsonify
 from collections import defaultdict
 
 app = Flask(__name__)
@@ -49,6 +50,11 @@ def send_to_discord(message):
     except Exception as e:
         print(f"Failed to send message to Discord: {e}")
 
+def log_trade_to_csv(entry):
+    with open("trades.csv", "a", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow([entry["timestamp"], entry["strategy"], entry["symbol"], entry["price"], entry["amount"], entry["qty"]])
+
 def simulate_trades():
     balance = 1000
     amount = balance * 0.05
@@ -58,16 +64,18 @@ def simulate_trades():
         price = get_price(symbol)
         if price and strategy_fn(symbol, price):
             qty = amount / price
-            log = {
+            entry = {
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
                 "symbol": symbol,
                 "price": price,
                 "qty": qty,
                 "amount": amount,
                 "strategy": strategy_name
             }
-            trade_log.append(log)
+            trade_log.append(entry)
             strategy_stats[strategy_name]["count"] += 1
             strategy_stats[strategy_name]["volume"] += amount
+            log_trade_to_csv(entry)
             print(f"💰 BUY [{strategy_name}] {symbol} @ ${price:.2f} | ${amount:.2f} | Qty: {qty:.4f}")
 
 def hourly_report():
@@ -84,13 +92,16 @@ def hourly_report():
 
         print(message)
         send_to_discord(message)
-
         trade_log.clear()
         strategy_stats.clear()
 
 @app.route("/")
 def home():
-    return "AtomicBot (strategy summary) is running."
+    return "AtomicBot Live Test Server"
+
+@app.route("/api/trades")
+def get_trades():
+    return jsonify(trade_log)
 
 threading.Thread(target=hourly_report, daemon=True).start()
 threading.Thread(target=lambda: (time.sleep(10), [simulate_trades() or time.sleep(TRADE_INTERVAL) for _ in iter(int, 1)]), daemon=True).start()

@@ -1,2 +1,2 @@
-# AtomicBot – Strategioversikt
-Tydelig per-strategi rapport med simulert volum og handelsantall.
+# AtomicBot Live Demo
+Lagrer handler, sender rapporter og støtter API-endepunkt for dashboard.
