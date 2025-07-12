@@ -1,1 +1,2 @@
-web: gunicorn atomicbot_goal_aggressive:app
+web: python atomicbot_dispatch_goal.py
+
