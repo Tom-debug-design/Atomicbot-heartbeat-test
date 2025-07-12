@@ -9,7 +9,6 @@ app = Flask(__name__)
 
 DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1391855933071560735/uH6LYuqM6uHLet9KhsgCS89fQikhyuPRJmjhqmtESMhAlu3LxDfUrVggwxzSGyscEtiN"
 TOKENS = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]
-TRADE_INTERVAL = 60
 HEARTBEAT_INTERVAL = 3600
 
 open_positions = {}
@@ -131,7 +130,7 @@ def send_to_discord(message):
 
 @app.route("/")
 def home():
-    return "✅ Realistic Trading Bot Running"
+    return "✅ Bot Running: Fast exits, smart entries."
 
 @app.route("/api/open")
 def open_trades():
@@ -141,13 +140,13 @@ def open_trades():
 def history():
     return jsonify(trade_history)
 
-def run_trading_loop():
-    while True:
-        simulate_entry()
-        check_exit()
-        time.sleep(TRADE_INTERVAL)
+# Entry every 60s
+threading.Thread(target=lambda: (time.sleep(5), [simulate_entry() or time.sleep(60) for _ in iter(int, 1)]), daemon=True).start()
 
-threading.Thread(target=run_trading_loop, daemon=True).start()
+# Exit check every 15s
+threading.Thread(target=lambda: (time.sleep(10), [check_exit() or time.sleep(15) for _ in iter(int, 1)]), daemon=True).start()
+
+# Hourly strategy eval
 threading.Thread(target=hourly_report, daemon=True).start()
 
 if __name__ == "__main__":

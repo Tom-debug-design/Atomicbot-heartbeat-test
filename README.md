@@ -1,1 +1,2 @@
-# AtomicBot Realistic PnL\nTrade bot with entry/exit logic, take profit and stop loss.
+# AtomicBot Best of Both Worlds
+Entry every 60s, exit checks every 15s with smart strategy switching.
