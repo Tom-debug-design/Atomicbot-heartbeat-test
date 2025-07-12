@@ -1,3 +1,4 @@
 flask
 requests
 gunicorn
+add websocket-clientfor live price feed
