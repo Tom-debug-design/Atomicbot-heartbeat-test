@@ -38,3 +38,6 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("Bot manually stopped.")
+def run_aggressive_strategy():
+            import asyncio 
+            asyncio.run(main())        
