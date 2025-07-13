@@ -1,6 +1,9 @@
 import requests
 
-DISCORD_WEBHOOK_URL = https://discord.com/api/webhooks/1391855933071560735/uH6LYuqM6uHLet9KhsgCS89fQikhyuPRJmjhqmtESMhAlu3LxDfUrVggwxzSGyscEtiN
+# ⛔ VIKTIG: BYTT UT DENNE MED DIN EGEN WEBHOOK-URL FRA DISCORD
+DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/..."  # <- Sett inn din egen her
+
+MAX_LENGTH = 1900
 
 def send_discord_message(message):
     if not message:
@@ -18,5 +21,5 @@ def send_discord_message(message):
 
 def _send(text):
     r = requests.post(DISCORD_WEBHOOK_URL, json={"content": text})
-    if r.status_code != 204 and r.status_code != 200:
+    if r.status_code not in (200, 204):
         print(f"🚨 Webhook-feil: {r.status_code} | {r.text}")
