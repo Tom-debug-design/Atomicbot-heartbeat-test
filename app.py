@@ -1,18 +1,13 @@
-# app.py
-
 from flask import Flask
-from heartbeat import send_heartbeat
+from discord_logger import send_discord_message
 
 app = Flask(__name__)
 
-@app.route("/")
-def home():
-    return "AtomicBot is running!"
+@app.route('/')
+def index():
+    return "AtomicBot is running."
 
-@app.route("/heartbeat")
+@app.route('/heartbeat')
 def heartbeat():
-    send_heartbeat()
-    return "✅ Heartbeat sent to Discord!"
-
-if __name__ == "__main__":
-    app.run(debug=True)
+    send_discord_message("💓 Heartbeat: AtomicBot is alive and kicking!")
+    return "Heartbeat sent!"
