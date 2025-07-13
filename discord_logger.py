@@ -1,7 +1,6 @@
 import requests
 
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/..."  # <- BYTT UT med din faktiske URL
-MAX_LENGTH = 1900
+DISCORD_WEBHOOK_URL = https://discord.com/api/webhooks/1391855933071560735/uH6LYuqM6uHLet9KhsgCS89fQikhyuPRJmjhqmtESMhAlu3LxDfUrVggwxzSGyscEtiN
 
 def send_discord_message(message):
     if not message:
