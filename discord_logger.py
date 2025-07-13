@@ -1,8 +1,7 @@
 import requests
 
 # ⛔ VIKTIG: BYTT UT DENNE MED DIN EGEN WEBHOOK-URL FRA DISCORD
-DISCORD_WEBHOOK_URL = https://discord.com/api/webhooks/1391855933071560735/uH6LYuqM6uHLet9KhsgCS89fQikhyuPRJmjhqmtESMhAlu3LxDfUrVggwxzSGyscEtiN
-
+DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1391855930371560735/uH6LYuqM6uHL..."
 def send_discord_message(message):
     if not message:
         return
