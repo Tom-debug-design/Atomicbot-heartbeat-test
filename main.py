@@ -1,22 +1,10 @@
-from flask import Flask
-import os
-import requests
-from datetime import datetime
+import time
+from discord_logger import send_discord_message
 
-app = Flask(__name__)
-
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-
-def send_discord_message(message):
-    if DISCORD_WEBHOOK_URL:
+if __name__ == "__main__":
+    while True:
         try:
-            requests.post(DISCORD_WEBHOOK_URL, json={"content": message})
+            send_discord_message("💓 Heartbeat: AtomicBot is alive and kicking!")
         except Exception as e:
-            print(f"Discord error: {e}")
-
-@app.route("/")
-def index():
-    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    msg = f"✅ Bot is alive at {now} UTC"
-    send_discord_message(msg)
-    return msg
+            print(f"Failed to send Discord message: {e}")
+        time.sleep(60)
