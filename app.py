@@ -22,7 +22,3 @@ def webhook():
         return f"Status: {response.status_code}", response.status_code
     except Exception as e:
         return f"Feil: {e}", 500
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=False, host="0.0.0.0", port=port)
