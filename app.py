@@ -1,24 +1,37 @@
-from flask import Flask, request
-import requests
 import os
+import requests
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
+WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK")
 
-DISCORD_WEBHOOK = os.getenv("DISCORD_WEBHOOK", "https://discord.com/api/webhooks/1391855933071560735/uH6LYuqM6uHLet9KhsgCS89fqikhyuPRJmjhqmtESMhAlu3LxDfUrVggwxzSGyscEtiN")
-
-@app.route("/")
-def home():
-    return "✅ Atomicbot webhook-app kjører!"
-
-@app.route("/webhook")
+@app.route("/webhook", methods=["GET", "POST"])
 def webhook():
-    msg = request.args.get("msg", "👋 Standardmelding fra Railway webhook.")
+    if not WEBHOOK_URL:
+        app.logger.error("Miljøvariabel DISCORD_WEBHOOK mangler!")
+        return jsonify({"error": "DISCORD_WEBHOOK env var not set"}), 500
+    msg = request.args.get("msg") or request.form.get("msg")
+    if not msg:
+        return jsonify({"error": "No msg parameter"}), 400
     data = {
         "content": msg,
         "username": "Atomicbot Webhook"
     }
     try:
-        response = requests.post(DISCORD_WEBHOOK, json=data)
-        return f"Status: {response.status_code}", response.status_code
+        resp = requests.post(WEBHOOK_URL, json=data, timeout=10)
+        app.logger.info(f"Respons fra Discord: {resp.status_code} {resp.text}")
+        return jsonify({
+            "status_code": resp.status_code,
+            "discord_response": resp.text
+        }), resp.status_code
     except Exception as e:
-        return f"Feil: {e}", 500
+        app.logger.exception("Webhook send feilet:")
+        return jsonify({"error": f"Exception: {str(e)}"}), 500
+
+@app.route("/", methods=["GET"])
+def index():
+    status = "OK" if WEBHOOK_URL else "DISCORD_WEBHOOK ikke satt!"
+    return f"Atomicbot webhook relay er aktiv! Status: {status}"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
