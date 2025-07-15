@@ -3,6 +3,7 @@ import requests
 from flask import Flask, request, jsonify
 import logging
 logging.basicConfig(level=logging.INFO)
+print("app starter")
 
 app = Flask(__name__)
 WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK")
