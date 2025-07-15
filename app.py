@@ -33,5 +33,4 @@ def index():
     status = "OK" if WEBHOOK_URL else "DISCORD_WEBHOOK ikke satt!"
     return f"Atomicbot webhook relay er aktiv! Status: {status}"
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+
