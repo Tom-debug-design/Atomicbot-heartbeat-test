@@ -1,10 +1,3 @@
-# AtomicBot Aggressive v1
+# AtomicBot Aggressive v2
 
-Smart trading bot with:
-- RSI + EMA crossover strategy
-- Simulated trades on Binance tickers
-- Discord logging (webhook)
-- Hourly status & PnL reports
-- Daily report @ 06:00 UTC
-
-Deploy on Railway. Set `DISCORD_WEBHOOK` in environment variables.
+Full strategi med RSI, EMA, kjøp/salg, rapportering og AI-forberedt struktur.
