@@ -1,7 +1,7 @@
 import os
 import requests
 
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK")
 
 def send_discord_message(content):
     if DISCORD_WEBHOOK_URL:
