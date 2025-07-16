@@ -1,3 +1,3 @@
-# AtomicBot Aggressive v2
+# AtomicBot Aggressive v3
 
-Full strategi med RSI, EMA, kjøp/salg, rapportering og AI-forberedt struktur.
+High-frequency trading bot with real RSI/EMA strategy, AI signal learning, and smart token prioritization.
