@@ -1,12 +1,12 @@
-# AtomicBot Heartbeat
+# AtomicBot (Simulated Trades + Heartbeat)
 
-Simple Flask app that sends a heartbeat message to Discord every 60 seconds.
+Sends heartbeat and simulated trades to Discord using public Binance prices.
 
-## Files
-- `main.py`: Runs the Flask server and heartbeat loop.
-- `discord_logger.py`: Handles Discord webhook messages.
-- `requirements.txt`: Dependencies.
-- `Procfile`: Launches the app via Gunicorn.
+## Includes
+- `main.py`: Runs Flask + loop
+- `discord_logger.py`: Sends messages to Discord
+- `trade_simulator.py`: Runs 5% simulated buy per token
+- `requirements.txt`, `Procfile`
 
 ## Deployment
-Deploy to Railway or similar platform. Make sure to set `DISCORD_WEBHOOK_URL` as an environment variable.
+Use Railway. Set `DISCORD_WEBHOOK` as environment variable.
