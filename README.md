@@ -1,8 +1,12 @@
-# Atomicbot Heartbeat
+# AtomicBot Heartbeat
 
-## 1. Set environment variable in Railway:
-DISCORD_WEBHOOK = (your Discord webhook URL)
+Simple Flask app that sends a heartbeat message to Discord every 60 seconds.
 
-## 2. Deploy and visit / or /ping for status.
+## Files
+- `main.py`: Runs the Flask server and heartbeat loop.
+- `discord_logger.py`: Handles Discord webhook messages.
+- `requirements.txt`: Dependencies.
+- `Procfile`: Launches the app via Gunicorn.
 
-## 3. Send GET or POST to /webhook?msg=hello
+## Deployment
+Deploy to Railway or similar platform. Make sure to set `DISCORD_WEBHOOK_URL` as an environment variable.
