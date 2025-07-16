@@ -1,12 +1,10 @@
-# AtomicBot (Simulated Trades + Heartbeat)
+# AtomicBot Aggressive v1
 
-Sends heartbeat and simulated trades to Discord using public Binance prices.
+Smart trading bot with:
+- RSI + EMA crossover strategy
+- Simulated trades on Binance tickers
+- Discord logging (webhook)
+- Hourly status & PnL reports
+- Daily report @ 06:00 UTC
 
-## Includes
-- `main.py`: Runs Flask + loop
-- `discord_logger.py`: Sends messages to Discord
-- `trade_simulator.py`: Runs 5% simulated buy per token
-- `requirements.txt`, `Procfile`
-
-## Deployment
-Use Railway. Set `DISCORD_WEBHOOK` as environment variable.
+Deploy on Railway. Set `DISCORD_WEBHOOK` in environment variables.
