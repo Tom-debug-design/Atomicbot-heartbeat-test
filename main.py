@@ -1,32 +1,28 @@
-import os
-import threading
-import time
-import datetime
+
 from flask import Flask
+from heartbeat import send_heartbeat
 from discord_logger import send_discord_message
-from strategies import check_buy_signal
 from pnl_tracker import log_trade, report_pnl
+from trading import perform_trading_loop
+import schedule
+import time
+import threading
 
 app = Flask(__name__)
 
-@app.route("/")
-def home():
-    return "AtomicBot v3 is alive!"
+@app.route('/')
+def index():
+    return "AtomicBot v3.1 is running"
 
-def bot_loop():
+def run_schedule():
+    schedule.every().hour.at(":00").do(lambda: send_discord_message("🔁 Hourly status: AtomicBot is online"))
+    schedule.every().hour.at(":01").do(lambda: report_pnl(hourly=True))
+    schedule.every().day.at("06:00").do(lambda: report_pnl(daily=True))
     while True:
-        now = datetime.datetime.utcnow()
-        try:
-            if now.minute == 0:
-                send_discord_message(f"🕐 Hourly status: AtomicBot is online ({now})")
-                report_pnl()
-            if now.hour == 6 and now.minute == 0:
-                send_discord_message(f"📊 Daily Report @ {now.strftime('%H:%M')} UTC")
-                report_pnl(daily=True)
-        except Exception as e:
-            print("Loop error:", e)
-        time.sleep(15)
+        schedule.run_pending()
+        time.sleep(1)
 
-if __name__ == "__main__":
-    threading.Thread(target=bot_loop).start()
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+if __name__ == '__main__':
+    threading.Thread(target=run_schedule).start()
+    perform_trading_loop()
+    app.run(host='0.0.0.0', port=8080)
