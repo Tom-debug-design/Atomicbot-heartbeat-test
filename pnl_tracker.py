@@ -1,10 +1,16 @@
 from datetime import datetime
+from discord_logger import send_to_discord
 
-def report_pnl(hourly=False, daily=False):
+def report_pnl(mode="hourly"):
     now = datetime.utcnow()
-    if daily:
-        print(f"[📝 Daily Report] Generated at {now}")
-    elif hourly:
-        print(f"[📊 Hourly Report] Generated at {now}")
+    
+    if mode == "daily":
+        msg = f"📈 Daily Report generated at {now}"
+    elif mode == "hourly":
+        msg = f"📊 Hourly Report generated at {now}"
     else:
-        print(f"[🔍 General PnL Report] at {now}")
+        msg = f"📎 General PnL Report at {now}"
+    
+    print(msg)
+    send_to_discord(msg)
+
