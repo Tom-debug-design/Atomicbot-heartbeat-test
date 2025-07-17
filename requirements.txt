@@ -1,6 +1,2 @@
 flask
-requests
-pandas
-numpy
-scikit-learn
-gunicorn
+discord-webhook

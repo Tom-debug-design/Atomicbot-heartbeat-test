@@ -1,4 +1,2 @@
-import random
-
-def select_strategy():
-    return random.choice(["basic", "even_minute", "expensive_only"])
+# strategies.py
+def select_strategy(): return 'aggressive_only'
