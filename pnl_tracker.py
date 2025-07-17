@@ -1,11 +1,10 @@
+from datetime import datetime
 
 def report_pnl(hourly=False, daily=False):
+    now = datetime.utcnow()
     if daily:
-        print("📝 Daily PnL Report: [Simulated]")
+        print(f"[📝 Daily Report] Generated at {now}")
     elif hourly:
-        print("📊 Hourly PnL Report: [Simulated]")
+        print(f"[📊 Hourly Report] Generated at {now}")
     else:
-        print("🔍 General PnL Report")
-
-def log_trade(trade):
-    print(f"🔁 Trade logged: {trade}")
+        print(f"[🔍 General PnL Report] at {now}")
