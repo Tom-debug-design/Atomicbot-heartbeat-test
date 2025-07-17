@@ -15,7 +15,7 @@ def home():
 def scheduler_loop():
     schedule.every().hour.at(":00").do(lambda: send_discord_message("🔁 Hourly status: AtomicBot is online"))
     schedule.every().hour.at(":01").do(lambda: report_pnl(hourly=True))
-    schedule.every().day.at("06:00").do(lambda: report_pnl(daily=True))
+    schedule.every().day.at("06:00").do(lambda: report_pnl("daily"))
     while True:
         schedule.run_pending()
         time.sleep(1)
