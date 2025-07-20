@@ -1,1 +1,20 @@
+name: ChatGPT Push Bridge
 
+on:
+  workflow_dispatch:
+
+jobs:
+  push-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Commit dummy change
+        run: |
+          echo "# Ping bridge from ChatGPT" >> ping.txt
+          git config user.name "ChatGPT"
+          git config user.email "chatgpt@example.com"
+          git add ping.txt
+          git commit -m "Bridge test: Commit from workflow"
+          git push
