@@ -1,26 +1,31 @@
-from flask import Flask
+
 import threading
-import schedule
 import time
-from discord_logger import send_discord_message
-from pnl_tracker import report_pnl
-from trading import perform_trading_loop
+from discord_logger import send_to_discord
 
-app = Flask(__name__)
+def heartbeat_loop():
+    count = 1
+    while count <= 24:
+        send_to_discord(f"⏰ Hourly report: {count}/24 completed.")
+        count += 1
+        time.sleep(3600)
 
-@app.route('/')
-def home():
-    return "AtomicBot v3.4 is alive"
+def trading_loop():
+    # Simulert trading-loop
+    symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'SOLUSDT', 'AVAXUSDT', 'MATICUSDT']
+    amount = 50.0  # 5% av 1000 USD
+    for symbol in symbols:
+        price = 100.0  # Simulert pris (erstatt med API-kall)
+        qty = amount / price
+        send_to_discord(
+            f"💰 Simulated BUY: {symbol} at ${price:.2f} | Amount: ${amount:.2f} | Qty: {qty:.4f}"
+        )
+        time.sleep(10)  # Kort pause mellom handler
 
-def scheduler_loop():
-    schedule.every().hour.at(":00").do(lambda: send_discord_message("🔁 Hourly status: AtomicBot is online"))
-    schedule.every().hour.at(":01").do(lambda: report_pnl(hourly=True))
-    schedule.every().day.at("06:00").do(lambda: report_pnl("daily"))
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+# Start trådene
+threading.Thread(target=heartbeat_loop, daemon=True).start()
+threading.Thread(target=trading_loop, daemon=True).start()
 
-if __name__ == "__main__":
-    threading.Thread(target=scheduler_loop).start()
-    perform_trading_loop()
-    app.run(host="0.0.0.0", port=8080)
+# Hold hovedtråden kjørende
+while True:
+    time.sleep(60)
