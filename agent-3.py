@@ -1,9 +1,9 @@
-
 import requests
 import time
 from datetime import datetime
 
-WEBHOOK_URL = "https://discord.com/api/webhooks/1391856933071560736/uh6LYuqM6uHLet9KhsgCS89FQiikhyuPRJmjhqtESMhA1u3LxDfUrVgowzzS9ryceEtkl"
+# ✅ Bruker riktig og fungerende webhook fra brukeren
+WEBHOOK_URL = "https://discord.com/api/webhooks/1391855933071560735/uH6LYuqM6uHLet9KhsgCS89fQikhyuPRJmjhqmtESMhAlu3LxDfUrVggwxzSGyscEtiN"
 
 def send_to_discord(msg):
     try:
@@ -25,10 +25,11 @@ def send_heartbeat():
     except Exception as e:
         print("❌ Failed to send heartbeat:", e)
 
-# ✅ Testmelding rett etter oppstart
-send_to_discord("🟢 agent.py is LIVE – webhook fungerer ✅")
+# ✅ Startmelding
+send_to_discord("🟢 agent-3.py er LIVE og webhook fungerer ✅")
 
-# Start loop
+# Loop
 while True:
     send_heartbeat()
     time.sleep(60)
+
