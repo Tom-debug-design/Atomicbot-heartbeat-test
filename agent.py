@@ -1,19 +1,24 @@
 import time
 import requests
-import os
+from datetime import datetime
 
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "https://discord.com/api/webhooks/your_webhook_here")
+WEBHOOK_URL = https://discord.com/api/webhooks/1391855933071560735/uH6LYuqM6uHLet9KhsgCS89fQikhyuPRJmjhqmtESMhAlu3LxDfUrVggwxzSGyscEtiN
 
-def log_heartbeat():
-    timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
-    message = f"✅ Heartbeat: AtomicBot agent running at {timestamp}"
+def send_heartbeat():
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    message = {
+        "content": f"💓 Heartbeat: AtomicBot is alive at {now} UTC"
+    }
     try:
-        requests.post(DISCORD_WEBHOOK_URL, json={"content": message})
-        print("✅ Heartbeat sent to Discord")
+        response = requests.post(WEBHOOK_URL, json=message)
+        if response.status_code == 204:
+            print(f"✅ Heartbeat sent at {now}")
+        else:
+            print(f"❌ Failed to send heartbeat: {response.status_code} {response.text}")
     except Exception as e:
-        print(f"❌ Failed to send heartbeat: {e}")
+        print(f"🔥 Exception during heartbeat: {e}")
 
 if __name__ == "__main__":
     while True:
-        log_heartbeat()
+        send_heartbeat()
         time.sleep(60)
