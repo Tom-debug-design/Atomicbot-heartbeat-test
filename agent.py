@@ -2,7 +2,8 @@ import time
 import requests
 from datetime import datetime
 
-WEBHOOK_URL = https://discord.com/api/webhooks/1391855933071560735/uH6LYuqM6uHLet9KhsgCS89fQikhyuPRJmjhqmtESMhAlu3LxDfUrVggwxzSGyscEtiN
+WEBHOOK_URL = "https://discord.com/api/webhooks/1391855933071560735/uH6LYuqM6uHLet9KhsgCS89fQikhyuPRJmjhqmtESMhAlu3LxDfUrVggwxzSGyscEtiN"
+
 
 def send_heartbeat():
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
