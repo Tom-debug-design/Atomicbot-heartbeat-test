@@ -1,3 +1,5 @@
 {
-  "startCommand": "python3 start.py"
+  "scripts": {
+    "start": "python3 start.py"
+  }
 }

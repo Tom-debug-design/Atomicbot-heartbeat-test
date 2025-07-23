@@ -1,3 +1,3 @@
-# AtomicBot Full Deploy
+# AtomicBot
 
-Inneholder bridge-agent, hourly reporter og tradingmodul v3. Klar for Railway-deploy.
+Ready for Railway deployment.

@@ -1,2 +1,1 @@
-# Legacy ping agent
-print('Heartbeat active')
+# agent code

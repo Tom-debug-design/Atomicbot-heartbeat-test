@@ -1,2 +1,1 @@
-# Hourly reporter
-print('Hourly reporter triggered')
+# reporter logic
