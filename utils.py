@@ -1,1 +1,1 @@
-# Utility functions for reporting
+# Utilities for reporter

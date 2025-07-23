@@ -1,8 +1,7 @@
-from atomicbot_v3 import main as bot_main
-from reporter_hourly import reporter
-from bridge_agent import bridge_agent
+import time
+from bridge_agent import run_bridge
+from reporter_hourly import run_hourly_reporter
 
-if __name__ == '__main__':
-    bot_main.main()
-    reporter.main()
-    bridge_agent.main()
+if __name__ == "__main__":
+    run_bridge()
+    run_hourly_reporter()

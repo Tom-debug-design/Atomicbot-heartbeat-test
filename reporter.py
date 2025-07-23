@@ -1,1 +1,2 @@
-# Sends hourly reports to Discord
+# Hourly reporter
+print('Hourly reporter triggered')
