@@ -1,1 +1,1 @@
-# agent code
+print('Bridge agent active')

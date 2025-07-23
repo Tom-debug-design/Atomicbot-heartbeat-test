@@ -1,3 +1,1 @@
-# AtomicBot
-
-Ready for Railway deployment.
+# AtomicBot Full Deploy

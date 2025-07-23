@@ -1,1 +1,2 @@
-# reporter logic
+def report():
+    print('Hourly report')

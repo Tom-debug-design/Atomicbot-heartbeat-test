@@ -1,5 +1,5 @@
 {
-  "scripts": {
+  "build": {
     "start": "python3 start.py"
   }
 }
