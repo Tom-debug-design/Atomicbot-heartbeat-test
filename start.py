@@ -1,4 +1,3 @@
-# Unified launcher
 from atomicbot_v3 import main as bot_main
 from reporter_hourly import reporter
 from bridge_agent import bridge_agent
