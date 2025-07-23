@@ -1,8 +1,6 @@
-# AtomicBot v3 – Komplett System
+# Railway Deploy Files for AtomicBot v3
 
-Dette prosjektet inneholder:
-
-1. Legacy heartbeat-agent
-2. atomicbot_v3 med RSI/EMA strategi og handler
-3. Hourly reporter modul
-4. GitHub push-agent
+## Hva du gjør:
+1. Legg disse filene i root av GitHub-repoet ditt
+2. Railway vil da bruke `Procfile` automatisk
+3. Sørg for at `atomicbot_v3/main.py` finnes og fungerer

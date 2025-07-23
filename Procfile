@@ -1,1 +1,1 @@
-worker: python agent-3.py
+python3 atomicbot_v3/main.py
