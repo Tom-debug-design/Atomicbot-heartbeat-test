@@ -1,3 +1,8 @@
-# AtomicBot Aggressive v3
+# AtomicBot v3 – Komplett System
 
-High-frequency trading bot with real RSI/EMA strategy, AI signal learning, and smart token prioritization.
+Dette prosjektet inneholder:
+
+1. Legacy heartbeat-agent
+2. atomicbot_v3 med RSI/EMA strategi og handler
+3. Hourly reporter modul
+4. GitHub push-agent
