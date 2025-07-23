@@ -1,1 +1,1 @@
-# Handles logging
+# Logs trades and actions

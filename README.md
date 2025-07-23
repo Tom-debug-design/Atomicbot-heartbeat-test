@@ -1,11 +1,11 @@
-# AtomicBot Full System
+# AtomicBot – Komplett System med Bridge
 
-Denne pakken inkluderer:
-- atomicbot_v3: RSI/EMA-baserte handler
-- reporter_hourly: Timesrapporter til Discord
-- bridge_agent: Automatisk push til GitHub
+Dette inneholder:
+- Handler (v3)
+- Discord timesrapport
+- Push-agent til GitHub
 
 ## Deploy
-1. Last opp alt til GitHub root
-2. Sett GITHUB_TOKEN og REPO_NAME i Railway secrets
-3. Railway bruker Procfile automatisk
+1. Last opp til GitHub root
+2. Sett `GITHUB_TOKEN` og `REPO_NAME` i Railway secrets
+3. Railway starter automatisk via `Procfile`

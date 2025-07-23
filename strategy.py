@@ -1,1 +1,1 @@
-# Strategy logic here
+# Strategy logic for RSI/EMA
