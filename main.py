@@ -1,2 +1,2 @@
-# Entry point for v3
-print('AtomicBot v3 running')
+# Entry point for AtomicBot v3
+print('Running AtomicBot v3')

@@ -1,1 +1,1 @@
-python3 atomicbot_v3/main.py
+python3 start.py

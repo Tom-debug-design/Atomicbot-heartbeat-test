@@ -1,1 +1,1 @@
-# Executes simulated or real trades
+# Executes trades

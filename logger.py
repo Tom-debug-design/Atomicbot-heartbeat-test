@@ -1,1 +1,1 @@
-# Logging module
+# Handles logging

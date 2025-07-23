@@ -1,1 +1,1 @@
-# Pushes changes to GitHub
+# Pushes pending files to GitHub

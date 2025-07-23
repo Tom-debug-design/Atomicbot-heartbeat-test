@@ -1,6 +1,11 @@
-# Railway Deploy Files for AtomicBot v3
+# AtomicBot Full System
 
-## Hva du gjør:
-1. Legg disse filene i root av GitHub-repoet ditt
-2. Railway vil da bruke `Procfile` automatisk
-3. Sørg for at `atomicbot_v3/main.py` finnes og fungerer
+Denne pakken inkluderer:
+- atomicbot_v3: RSI/EMA-baserte handler
+- reporter_hourly: Timesrapporter til Discord
+- bridge_agent: Automatisk push til GitHub
+
+## Deploy
+1. Last opp alt til GitHub root
+2. Sett GITHUB_TOKEN og REPO_NAME i Railway secrets
+3. Railway bruker Procfile automatisk
