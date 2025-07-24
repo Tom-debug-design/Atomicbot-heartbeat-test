@@ -1,1 +1,1 @@
-# Placeholder for agent.py
+# Placeholder for bridge agent
