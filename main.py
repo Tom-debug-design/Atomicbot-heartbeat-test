@@ -1,1 +1,1 @@
-# main bot logic
+# Placeholder for main.py

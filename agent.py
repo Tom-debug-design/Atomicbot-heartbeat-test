@@ -1,1 +1,1 @@
-print('Bridge agent active')
+# Placeholder for agent.py

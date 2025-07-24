@@ -1,2 +1,1 @@
-def report():
-    print('Hourly report')
+# Placeholder for reporter.py
